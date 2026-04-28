@@ -29,12 +29,6 @@ export function SiteHeader() {
             </div>
           </div>
 
-          <div className="hidden items-center gap-2 sm:flex">
-            <span className="inline-flex h-2 w-2 animate-pulse rounded-full bg-emerald-400 shadow-[0_0_12px] shadow-emerald-400/60" />
-            <span className="text-xs font-medium text-muted-foreground">
-              Sistemas operativos
-            </span>
-          </div>
         </div>
       </div>
     </header>
