@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Calculator, FileText } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { AppTile } from "@/components/AppTile";
+import { apps } from "@/data/apps";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -38,22 +38,17 @@ function DashboardPage() {
           aria-label="Aplicaciones disponibles"
           className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:gap-8"
         >
-          <AppTile
-            index={0}
-            title="Cotizador TC"
-            description="Acceso directo al sistema de cotizaciones. Genera, edita y comparte propuestas comerciales en segundos."
-            href="https://taabalcotizador.lovable.app/"
-            icon={Calculator}
-            badge="Ventas"
-          />
-          <AppTile
-            index={1}
-            title="Gestión de Facturas"
-            description="Sistema de facturación interna de Taabal Group. Control y seguimiento de toda la operación administrativa."
-            href="https://taabalcotizador.lovable.app/"
-            icon={FileText}
-            badge="Administración"
-          />
+          {apps.map((app, i) => (
+            <AppTile
+              key={app.id}
+              index={i}
+              title={app.title}
+              description={app.description}
+              href={app.href}
+              icon={app.icon}
+              badge={app.badge}
+            />
+          ))}
         </section>
       </main>
 
