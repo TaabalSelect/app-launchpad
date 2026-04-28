@@ -32,22 +32,7 @@ function DashboardPage() {
       <SiteHeader />
 
       <main className="relative mx-auto w-full max-w-6xl flex-1 px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
-        <section className="mx-auto mb-16 max-w-3xl text-center sm:mb-20">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border/70 bg-card/40 px-3.5 py-1.5 text-xs font-medium text-muted-foreground backdrop-blur-md">
-            <Sparkles className="h-3.5 w-3.5 text-primary" />
-            <span className="uppercase tracking-[0.18em]">Dashboard interno</span>
-          </div>
-
-          <h1 className="text-balance text-4xl font-semibold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-            Aplicaciones{" "}
-            <span className="text-gradient-brand">internas</span>
-          </h1>
-
-          <p className="mx-auto mt-6 max-w-xl text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg">
-            Selecciona la herramienta a la que deseas acceder. Cada aplicación se abrirá
-            en una nueva pestaña.
-          </p>
-        </section>
+        <h1 className="sr-only">Aplicaciones internas Taabal Cancún</h1>
 
         <section
           aria-label="Aplicaciones disponibles"
