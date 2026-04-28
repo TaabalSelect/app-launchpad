@@ -1,27 +1,42 @@
-import logoTaabal from "@/assets/logo-taabal.jpg";
+import logoTaabal from "@/assets/logo-taabal.png";
 
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/70">
-      <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-3">
-          <img
-            src={logoTaabal}
-            alt="Taabal Cancún"
-            className="h-9 w-auto sm:h-10"
-            decoding="async"
-          />
-          <span className="sr-only">Taabal Cancún</span>
+    <header className="sticky top-0 z-40 w-full">
+      <div className="glass border-b border-border/60">
+        <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center gap-3">
+            <div className="relative flex h-10 w-10 items-center justify-center">
+              <span
+                aria-hidden="true"
+                className="absolute inset-0 rounded-xl opacity-40 blur-md"
+                style={{ background: "var(--gradient-brand)" }}
+              />
+              <img
+                src={logoTaabal}
+                alt="Taabal Cancún"
+                className="relative h-9 w-auto object-contain"
+                decoding="async"
+              />
+            </div>
+            <div className="flex flex-col leading-tight">
+              <span className="text-sm font-semibold tracking-tight text-foreground">
+                Taabal Cancún
+              </span>
+              <span className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+                Portal Interno
+              </span>
+            </div>
+          </div>
+
+          <div className="hidden items-center gap-2 sm:flex">
+            <span className="inline-flex h-2 w-2 animate-pulse rounded-full bg-emerald-400 shadow-[0_0_12px] shadow-emerald-400/60" />
+            <span className="text-xs font-medium text-muted-foreground">
+              Sistemas operativos
+            </span>
+          </div>
         </div>
-        <span className="hidden text-sm font-medium tracking-wide text-muted-foreground sm:inline">
-          Portal Interno
-        </span>
       </div>
-      <div
-        aria-hidden="true"
-        className="h-[2px] w-full"
-        style={{ background: "var(--gradient-brand)" }}
-      />
     </header>
   );
 }
