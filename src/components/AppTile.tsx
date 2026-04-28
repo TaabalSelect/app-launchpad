@@ -1,23 +1,30 @@
-import type { LucideIcon } from "lucide-react";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Pencil, Trash2 } from "lucide-react";
+import { getIcon } from "@/data/iconCatalog";
 
 interface AppTileProps {
   title: string;
   description: string;
   href: string;
-  icon: LucideIcon;
+  iconName: string;
   badge?: string;
   index?: number;
+  manageMode?: boolean;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
 export function AppTile({
   title,
   description,
   href,
-  icon: Icon,
+  iconName,
   badge,
   index = 0,
+  manageMode = false,
+  onEdit,
+  onDelete,
 }: AppTileProps) {
+  const Icon = getIcon(iconName);
   return (
     <a
       href={href}
