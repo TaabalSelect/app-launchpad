@@ -41,7 +41,7 @@ export const apps: AppItem[] = [
     title: "Gestión de Facturas",
     description:
       "Sistema de facturación interna de Taabal Group. Control y seguimiento de toda la operación administrativa.",
-    href: "https://taabalcotizador.lovable.app/",
+    href: "https://taabalgf.lovable.app/",
     icon: FileText,
     badge: "Administración",
   },
