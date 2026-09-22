@@ -1,102 +1,146 @@
 import { useCallback, useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { defaultApps, type AppItem, type ProjectItem } from "@/data/apps";
 
-const STORAGE_KEY = "taabal:apps:v1";
-const PROJECTS_STORAGE_KEY = "taabal:projects:v1";
+type AppRow = {
+  id: string;
+  title: string;
+  description: string | null;
+  href: string;
+  icon_name: string;
+  icon_image: string | null;
+  badge: string | null;
+  project_id: string | null;
+  position: number;
+};
 
-function loadFromStorage(): AppItem[] {
-  if (typeof window === "undefined") return defaultApps;
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return defaultApps;
-    const parsed = JSON.parse(raw) as AppItem[];
-    if (!Array.isArray(parsed)) return defaultApps;
-    return parsed;
-  } catch {
-    return defaultApps;
-  }
+type ProjectRow = { id: string; name: string; position: number };
+
+function toApp(row: AppRow): AppItem {
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description ?? "",
+    href: row.href,
+    iconName: row.icon_name,
+    iconImage: row.icon_image ?? undefined,
+    badge: row.badge ?? undefined,
+    projectId: row.project_id ?? undefined,
+  };
 }
 
-function saveToStorage(apps: AppItem[]) {
-  if (typeof window === "undefined") return;
-  try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(apps));
-  } catch {
-    // ignore quota errors
-  }
+function toRow(data: Omit<AppItem, "id">) {
+  return {
+    title: data.title,
+    description: data.description ?? "",
+    href: data.href,
+    icon_name: data.iconName,
+    icon_image: data.iconImage ?? null,
+    badge: data.badge ?? null,
+    project_id: data.projectId ?? null,
+  };
 }
 
-function loadProjects(): ProjectItem[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = window.localStorage.getItem(PROJECTS_STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw) as ProjectItem[];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
+/**
+ * Datos compartidos del portal: todo se guarda en la nube, así los cambios
+ * que hace una persona se ven en todos los dispositivos.
+ */
 export function useApps() {
-  // SSR-safe: arranca con defaults y rehidrata en el cliente.
-  const [apps, setApps] = useState<AppItem[]>(defaultApps);
+  const [apps, setApps] = useState<AppItem[]>([]);
   const [projects, setProjects] = useState<ProjectItem[]>([]);
   const [hydrated, setHydrated] = useState(false);
 
-  useEffect(() => {
-    setApps(loadFromStorage());
-    setProjects(loadProjects());
+  const refresh = useCallback(async () => {
+    const [appsRes, projectsRes] = await Promise.all([
+      supabase.from("apps").select("*").order("position").order("created_at"),
+      supabase.from("projects").select("*").order("position").order("created_at"),
+    ]);
+    if (!appsRes.error && appsRes.data) setApps((appsRes.data as AppRow[]).map(toApp));
+    if (!projectsRes.error && projectsRes.data) {
+      setProjects((projectsRes.data as ProjectRow[]).map((p) => ({ id: p.id, name: p.name })));
+    }
     setHydrated(true);
   }, []);
 
   useEffect(() => {
-    if (hydrated) saveToStorage(apps);
-  }, [apps, hydrated]);
+    void refresh();
 
-  useEffect(() => {
-    if (!hydrated || typeof window === "undefined") return;
-    try {
-      window.localStorage.setItem(PROJECTS_STORAGE_KEY, JSON.stringify(projects));
-    } catch {
-      // ignore quota errors
-    }
-  }, [projects, hydrated]);
+    const channel = supabase
+      .channel("portal-apps")
+      .on("postgres_changes", { event: "*", schema: "public", table: "apps" }, () => {
+        void refresh();
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "projects" }, () => {
+        void refresh();
+      })
+      .subscribe();
 
-  const addApp = useCallback((data: Omit<AppItem, "id">) => {
-    setApps((prev) => [
-      ...prev,
-      { ...data, id: `app-${Date.now()}-${Math.random().toString(36).slice(2, 7)}` },
-    ]);
-  }, []);
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [refresh]);
 
-  const updateApp = useCallback((id: string, data: Omit<AppItem, "id">) => {
-    setApps((prev) => prev.map((a) => (a.id === id ? { ...data, id } : a)));
-  }, []);
+  const addApp = useCallback(
+    async (data: Omit<AppItem, "id">) => {
+      await supabase.from("apps").insert({ ...toRow(data), position: Date.now() % 2147483647 });
+      await refresh();
+    },
+    [refresh],
+  );
 
-  const removeApp = useCallback((id: string) => {
-    setApps((prev) => prev.filter((a) => a.id !== id));
-  }, []);
+  const updateApp = useCallback(
+    async (id: string, data: Omit<AppItem, "id">) => {
+      await supabase.from("apps").update(toRow(data)).eq("id", id);
+      await refresh();
+    },
+    [refresh],
+  );
 
-  const resetApps = useCallback(() => {
-    setApps(defaultApps);
-    setProjects([]);
-  }, []);
+  const removeApp = useCallback(
+    async (id: string) => {
+      await supabase.from("apps").delete().eq("id", id);
+      await refresh();
+    },
+    [refresh],
+  );
 
-  const addProject = useCallback((name: string) => {
-    const id = `project-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-    setProjects((prev) => [...prev, { id, name }]);
-    return id;
-  }, []);
+  const resetApps = useCallback(async () => {
+    await supabase.from("apps").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+    await supabase.from("projects").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+    await supabase.from("apps").insert(
+      defaultApps.map((app, index) => ({ ...toRow(app), position: index })),
+    );
+    await refresh();
+  }, [refresh]);
 
-  const renameProject = useCallback((id: string, name: string) => {
-    setProjects((prev) => prev.map((project) => (project.id === id ? { ...project, name } : project)));
-  }, []);
+  const addProject = useCallback(
+    async (name: string) => {
+      const { data } = await supabase
+        .from("projects")
+        .insert({ name, position: Date.now() % 2147483647 })
+        .select("id")
+        .single();
+      await refresh();
+      return data?.id ?? "";
+    },
+    [refresh],
+  );
 
-  const removeProject = useCallback((id: string) => {
-    setProjects((prev) => prev.filter((project) => project.id !== id));
-    setApps((prev) => prev.map((app) => (app.projectId === id ? { ...app, projectId: undefined } : app)));
-  }, []);
+  const renameProject = useCallback(
+    async (id: string, name: string) => {
+      await supabase.from("projects").update({ name }).eq("id", id);
+      await refresh();
+    },
+    [refresh],
+  );
+
+  const removeProject = useCallback(
+    async (id: string) => {
+      await supabase.from("projects").delete().eq("id", id);
+      await refresh();
+    },
+    [refresh],
+  );
 
   return {
     apps,
