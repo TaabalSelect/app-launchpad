@@ -14,7 +14,74 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      apps: {
+        Row: {
+          badge: string | null
+          created_at: string
+          description: string
+          href: string
+          icon_image: string | null
+          icon_name: string
+          id: string
+          position: number
+          project_id: string | null
+          title: string
+        }
+        Insert: {
+          badge?: string | null
+          created_at?: string
+          description?: string
+          href: string
+          icon_image?: string | null
+          icon_name?: string
+          id?: string
+          position?: number
+          project_id?: string | null
+          title: string
+        }
+        Update: {
+          badge?: string | null
+          created_at?: string
+          description?: string
+          href?: string
+          icon_image?: string | null
+          icon_name?: string
+          id?: string
+          position?: number
+          project_id?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "apps_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          position: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          position?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          position?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
