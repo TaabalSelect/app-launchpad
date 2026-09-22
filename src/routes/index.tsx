@@ -133,9 +133,9 @@ function DashboardPage() {
           activeProjectId={activeProjectId}
           manageMode={manageMode}
           onSelect={setActiveProjectId}
-          onCreate={(name) => {
-            const id = addProject(name);
-            setActiveProjectId(id);
+          onCreate={async (name) => {
+            const id = await addProject(name);
+            if (id) setActiveProjectId(id);
             toast.success("Pestaña creada.");
           }}
           onRename={(id, name) => {
