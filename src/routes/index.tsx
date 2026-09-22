@@ -80,11 +80,11 @@ function DashboardPage() {
 
       <SiteHeader />
 
-      <main className="relative mx-auto w-full max-w-6xl flex-1 px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-20">
+      <main className="relative mx-auto w-full max-w-7xl flex-1 px-3 pb-10 pt-5 sm:px-6 sm:pb-16 sm:pt-12 lg:px-8">
         <h1 className="sr-only">Aplicaciones internas Taabal Cancún</h1>
 
         {/* Toolbar */}
-        <div className="mb-8 flex flex-wrap items-center justify-end gap-2 sm:mb-10">
+        <div className="mb-7 flex min-h-8 flex-wrap items-center justify-end gap-2 sm:mb-12">
           {manageMode ? (
             <>
               <Button
@@ -125,7 +125,7 @@ function DashboardPage() {
 
         <section
           aria-label="Aplicaciones disponibles"
-          className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:gap-8"
+          className="launcher-grid mx-auto grid w-full grid-cols-3 gap-x-3 gap-y-7 min-[360px]:grid-cols-4 sm:grid-cols-4 sm:gap-x-8 sm:gap-y-12 md:grid-cols-5 lg:grid-cols-6"
         >
           {apps.map((app, i) => (
             <AppTile
@@ -135,6 +135,7 @@ function DashboardPage() {
               description={app.description}
               href={app.href}
               iconName={app.iconName}
+              iconImage={app.iconImage}
               badge={app.badge}
               manageMode={manageMode}
               onEdit={() => openEdit(app)}
@@ -143,35 +144,26 @@ function DashboardPage() {
           ))}
 
           {manageMode ? (
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={openCreate}
-              className="group flex min-h-[260px] flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-border/70 bg-card/30 p-6 text-muted-foreground transition-all duration-300 hover:-translate-y-1 hover:border-primary/60 hover:bg-card/50 hover:text-foreground"
+              className="group h-auto min-w-0 flex-col items-center justify-start gap-0 bg-transparent p-0 text-muted-foreground shadow-none hover:bg-transparent hover:text-foreground"
             >
-              <div
-                className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 text-white transition-transform duration-300 group-hover:scale-110"
-                style={{ background: "var(--gradient-brand)" }}
-              >
-                <Plus className="h-7 w-7" strokeWidth={1.75} />
+              <div className="add-app-icon grid place-items-center border-2 border-dashed border-border bg-card/50 transition-all group-hover:border-primary/70 group-hover:bg-card">
+                <Plus className="h-7 w-7 sm:h-10 sm:w-10" strokeWidth={1.5} />
               </div>
-              <span className="text-base font-semibold">Añadir aplicación</span>
-              <span className="text-xs uppercase tracking-[0.16em]">
-                Crea una nueva tarjeta
-              </span>
-            </button>
+              <span className="app-name mt-2.5 line-clamp-2 font-medium sm:mt-4">Añadir aplicación</span>
+            </Button>
           ) : null}
         </section>
 
         {apps.length === 0 && !manageMode ? (
           <div className="mt-12 text-center text-sm text-muted-foreground">
             No hay aplicaciones todavía.{" "}
-            <button
-              type="button"
-              onClick={() => setManageMode(true)}
-              className="text-foreground underline underline-offset-4"
-            >
+            <Button type="button" variant="link" onClick={() => setManageMode(true)}>
               Activar modo administración
-            </button>
+            </Button>
           </div>
         ) : null}
       </main>
