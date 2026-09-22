@@ -21,15 +21,19 @@ const base = process.env.VITE_BASE_PATH || "/";
 
 export default defineConfig({
   base,
+  // El HTML de este build vive en /pages para que NO interfiera con el build
+  // SSR de Lovable (que trataría un index.html en la raíz como sitio estático).
+  root: resolve(__dirname, "pages"),
+  publicDir: resolve(__dirname, "public"),
   plugins: [
     TanStackRouterVite({
-      routesDirectory: "./src/routes",
-      generatedRouteTree: "./src/routeTree.gen.ts",
+      routesDirectory: resolve(__dirname, "src/routes"),
+      generatedRouteTree: resolve(__dirname, "src/routeTree.gen.ts"),
       autoCodeSplitting: true,
     }),
     react(),
     tailwindcss(),
-    tsconfigPaths(),
+    tsconfigPaths({ root: __dirname }),
     {
       // Después de construir, copia index.html a 404.html para que el SPA
       // fallback de GitHub Pages funcione en deep links y refresh.
@@ -44,7 +48,7 @@ export default defineConfig({
     },
   ],
   build: {
-    outDir: "dist",
+    outDir: resolve(__dirname, "dist"),
     emptyOutDir: true,
   },
 });
