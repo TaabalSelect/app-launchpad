@@ -197,6 +197,14 @@
   max-width: 70rem;
 }
 
+.project-tabs-scroll {
+  scrollbar-width: none;
+}
+
+.project-tabs-scroll::-webkit-scrollbar {
+  display: none;
+}
+
 .app-launcher-item {
   animation: app-arrive 500ms both cubic-bezier(0.22, 1, 0.36, 1);
 }

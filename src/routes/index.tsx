@@ -5,6 +5,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { AppTile } from "@/components/AppTile";
 import { AppFormDialog } from "@/components/AppFormDialog";
+import { ProjectTabs } from "@/components/ProjectTabs";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -40,12 +41,16 @@ export const Route = createFileRoute("/")({
 });
 
 function DashboardPage() {
-  const { apps, addApp, updateApp, removeApp, resetApps } = useApps();
+  const { apps, projects, addApp, updateApp, removeApp, resetApps, addProject, renameProject, removeProject } = useApps();
   const [manageMode, setManageMode] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<AppItem | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<AppItem | null>(null);
   const [confirmReset, setConfirmReset] = useState(false);
+  const [activeProjectId, setActiveProjectId] = useState("all");
+  const [confirmProjectDelete, setConfirmProjectDelete] = useState<string | null>(null);
+
+  const visibleApps = activeProjectId === "all" ? apps : apps.filter((app) => app.projectId === activeProjectId);
 
   function openCreate() {
     setEditing(null);
@@ -123,11 +128,28 @@ function DashboardPage() {
           )}
         </div>
 
+        <ProjectTabs
+          projects={projects}
+          activeProjectId={activeProjectId}
+          manageMode={manageMode}
+          onSelect={setActiveProjectId}
+          onCreate={(name) => {
+            const id = addProject(name);
+            setActiveProjectId(id);
+            toast.success("Pestaña creada.");
+          }}
+          onRename={(id, name) => {
+            renameProject(id, name);
+            toast.success("Pestaña actualizada.");
+          }}
+          onDelete={setConfirmProjectDelete}
+        />
+
         <section
           aria-label="Aplicaciones disponibles"
           className="launcher-grid mx-auto grid w-full grid-cols-3 gap-x-3 gap-y-7 min-[360px]:grid-cols-4 sm:grid-cols-4 sm:gap-x-8 sm:gap-y-12 md:grid-cols-5 lg:grid-cols-6"
         >
-          {apps.map((app, i) => (
+          {visibleApps.map((app, i) => (
             <AppTile
               key={app.id}
               index={i}
@@ -158,9 +180,9 @@ function DashboardPage() {
           ) : null}
         </section>
 
-        {apps.length === 0 && !manageMode ? (
+        {visibleApps.length === 0 && !manageMode ? (
           <div className="mt-12 text-center text-sm text-muted-foreground">
-            No hay aplicaciones todavía.{" "}
+            No hay aplicaciones en esta pestaña.{" "}
             <Button type="button" variant="link" onClick={() => setManageMode(true)}>
               Activar modo administración
             </Button>
@@ -175,7 +197,27 @@ function DashboardPage() {
         onOpenChange={setDialogOpen}
         initial={editing}
         onSubmit={handleSubmit}
+        projects={projects}
       />
+
+      <AlertDialog open={confirmProjectDelete !== null} onOpenChange={(open) => !open && setConfirmProjectDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar esta pestaña?</AlertDialogTitle>
+            <AlertDialogDescription>Las aplicaciones no se eliminarán; seguirán disponibles en “Todas” sin una pestaña asignada.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              if (!confirmProjectDelete) return;
+              removeProject(confirmProjectDelete);
+              if (activeProjectId === confirmProjectDelete) setActiveProjectId("all");
+              setConfirmProjectDelete(null);
+              toast.success("Pestaña eliminada.");
+            }}>Eliminar pestaña</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog
         open={confirmDelete !== null}
