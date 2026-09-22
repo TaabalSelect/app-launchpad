@@ -19,7 +19,13 @@ export interface AppItem {
   iconName: string;
   /** Imagen personalizada guardada como data URL para mantener el portal estático. */
   iconImage?: string;
+  projectId?: string;
   badge?: string;
+}
+
+export interface ProjectItem {
+  id: string;
+  name: string;
 }
 
 export const defaultApps: AppItem[] = [

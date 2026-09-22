@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { iconCatalog, iconNames, getIcon } from "@/data/iconCatalog";
-import type { AppItem } from "@/data/apps";
+import type { AppItem, ProjectItem } from "@/data/apps";
 import { toast } from "sonner";
 
 export interface AppFormDialogProps {
@@ -28,6 +28,7 @@ export interface AppFormDialogProps {
   onOpenChange: (open: boolean) => void;
   initial?: AppItem | null;
   onSubmit: (data: Omit<AppItem, "id">) => void;
+  projects: ProjectItem[];
 }
 
 const empty: Omit<AppItem, "id"> = {
@@ -37,6 +38,7 @@ const empty: Omit<AppItem, "id"> = {
   iconName: "FileText",
   badge: "",
   iconImage: undefined,
+  projectId: undefined,
 };
 
 const MAX_ICON_BYTES = 2 * 1024 * 1024;
@@ -71,7 +73,7 @@ async function prepareIcon(file: File): Promise<string> {
   return canvas.toDataURL('image/webp', 0.86);
 }
 
-export function AppFormDialog({ open, onOpenChange, initial, onSubmit }: AppFormDialogProps) {
+export function AppFormDialog({ open, onOpenChange, initial, onSubmit, projects }: AppFormDialogProps) {
   const [form, setForm] = useState<Omit<AppItem, "id">>(empty);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -85,6 +87,7 @@ export function AppFormDialog({ open, onOpenChange, initial, onSubmit }: AppForm
               href: initial.href,
               iconName: initial.iconName,
               iconImage: initial.iconImage,
+              projectId: initial.projectId,
               badge: initial.badge ?? "",
             }
           : empty,
@@ -143,6 +146,7 @@ export function AppFormDialog({ open, onOpenChange, initial, onSubmit }: AppForm
       href,
       iconName: form.iconName,
       iconImage: form.iconImage,
+      projectId: form.projectId,
       badge: badge || undefined,
     });
     onOpenChange(false);
@@ -237,6 +241,26 @@ export function AppFormDialog({ open, onOpenChange, initial, onSubmit }: AppForm
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Empresa o proyecto</Label>
+            <Select
+              value={form.projectId ?? "none"}
+              onValueChange={(value) => setForm((current) => ({
+                ...current,
+                projectId: value === "none" ? undefined : value,
+              }))}
+            >
+              <SelectTrigger><SelectValue placeholder="Sin asignar" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Sin asignar</SelectItem>
+                {projects.map((project) => (
+                  <SelectItem key={project.id} value={project.id}>{project.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {projects.length === 0 ? <p className="text-xs text-muted-foreground">Crea una pestaña desde Administrar para poder asignarla.</p> : null}
           </div>
 
           <div className="space-y-2">
