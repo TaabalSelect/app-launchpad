@@ -264,6 +264,11 @@
 }
 
 @media (min-width: 640px) {
+  .launcher-grid {
+    grid-template-columns: repeat(auto-fit, 8rem);
+    justify-content: center;
+  }
+
   .app-icon-shell,
   .add-app-icon {
     width: 7rem;
