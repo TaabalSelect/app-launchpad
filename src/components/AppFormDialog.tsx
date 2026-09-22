@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { ImagePlus, Trash2, Upload } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -35,10 +36,44 @@ const empty: Omit<AppItem, "id"> = {
   href: "",
   iconName: "FileText",
   badge: "",
+  iconImage: undefined,
 };
+
+const MAX_ICON_BYTES = 2 * 1024 * 1024;
+
+async function prepareIcon(file: File): Promise<string> {
+  if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
+    throw new Error('format');
+  }
+  if (file.size > MAX_ICON_BYTES) throw new Error('size');
+
+  const source = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error('read'));
+    reader.readAsDataURL(file);
+  });
+  const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('image'));
+    img.src = source;
+  });
+  const canvas = document.createElement('canvas');
+  canvas.width = 256;
+  canvas.height = 256;
+  const context = canvas.getContext('2d');
+  if (!context) throw new Error('canvas');
+  const side = Math.min(image.naturalWidth, image.naturalHeight);
+  const sx = (image.naturalWidth - side) / 2;
+  const sy = (image.naturalHeight - side) / 2;
+  context.drawImage(image, sx, sy, side, side, 0, 0, 256, 256);
+  return canvas.toDataURL('image/webp', 0.86);
+}
 
 export function AppFormDialog({ open, onOpenChange, initial, onSubmit }: AppFormDialogProps) {
   const [form, setForm] = useState<Omit<AppItem, "id">>(empty);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (open) {
@@ -49,6 +84,7 @@ export function AppFormDialog({ open, onOpenChange, initial, onSubmit }: AppForm
               description: initial.description,
               href: initial.href,
               iconName: initial.iconName,
+              iconImage: initial.iconImage,
               badge: initial.badge ?? "",
             }
           : empty,
@@ -57,6 +93,18 @@ export function AppFormDialog({ open, onOpenChange, initial, onSubmit }: AppForm
   }, [open, initial]);
 
   const PreviewIcon = getIcon(form.iconName);
+
+  async function handleIconFile(file?: File) {
+    if (!file) return;
+    try {
+      const iconImage = await prepareIcon(file);
+      setForm((current) => ({ ...current, iconImage }));
+    } catch (error) {
+      toast.error(error instanceof Error && error.message === 'size'
+        ? 'La imagen debe pesar menos de 2 MB.'
+        : 'Usa una imagen PNG, JPG o WebP válida.');
+    }
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -94,6 +142,7 @@ export function AppFormDialog({ open, onOpenChange, initial, onSubmit }: AppForm
       description,
       href,
       iconName: form.iconName,
+      iconImage: form.iconImage,
       badge: badge || undefined,
     });
     onOpenChange(false);
@@ -147,7 +196,7 @@ export function AppFormDialog({ open, onOpenChange, initial, onSubmit }: AppForm
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="badge">Etiqueta (opcional)</Label>
               <Input
@@ -187,6 +236,47 @@ export function AppFormDialog({ open, onOpenChange, initial, onSubmit }: AppForm
                   })}
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Icono personalizado (opcional)</Label>
+            <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 rounded-lg border border-border bg-muted/40 p-3">
+              <div className="app-icon-preview grid h-16 w-16 shrink-0 place-items-center overflow-hidden">
+                {form.iconImage ? (
+                  <img src={form.iconImage} alt="Vista previa del icono" className="h-full w-full object-cover" />
+                ) : (
+                  <PreviewIcon className="h-7 w-7 text-primary-foreground" />
+                )}
+              </div>
+              <div className="flex min-w-0 flex-wrap gap-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  className="sr-only"
+                  onChange={(event) => void handleIconFile(event.target.files?.[0])}
+                />
+                <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
+                  {form.iconImage ? <Upload /> : <ImagePlus />}
+                  {form.iconImage ? 'Reemplazar' : 'Subir imagen'}
+                </Button>
+                {form.iconImage ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setForm((current) => ({ ...current, iconImage: undefined }));
+                      if (fileInputRef.current) fileInputRef.current.value = '';
+                    }}
+                  >
+                    <Trash2 />
+                    Quitar
+                  </Button>
+                ) : null}
+                <p className="w-full text-xs text-muted-foreground">PNG, JPG o WebP · máximo 2 MB</p>
+              </div>
             </div>
           </div>
 

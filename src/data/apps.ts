@@ -17,6 +17,8 @@ export interface AppItem {
   href: string;
   /** Nombre del icono dentro de `iconCatalog` (ver iconCatalog.ts). */
   iconName: string;
+  /** Imagen personalizada guardada como data URL para mantener el portal estático. */
+  iconImage?: string;
   badge?: string;
 }
 
